@@ -1,0 +1,264 @@
+import os
+
+project_dir = "/mnt/agents/output/cbt_app"
+templates_dir = os.path.join(project_dir, "templates")
+
+# Create results.html - to view past responses
+results_html = '''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My CBT Responses</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .response-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .response-date {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .response-number {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .answer-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .answer-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .answer-value {
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .scale-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .scale-box {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .scale-box .emotion {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .scale-box .value {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .no-responses {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .no-responses h2 {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .no-responses p {
+            color: #999;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-clear {
+            background: #ff6b6b;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        
+        .btn-clear:hover {
+            background: #ee5a5a;
+        }
+        
+        .actions {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .actions a, .actions button {
+            margin: 0 10px;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .response-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 My CBT Responses</h1>
+        <p class="subtitle">Review your past thought records</p>
+        
+        {% if responses %}
+            {% for response in responses %}
+            <div class="response-card">
+                <div class="response-header">
+                    <span class="response-date">🕐 {{ response.timestamp }}</span>
+                    <span class="response-number">Record #{{ loop.index }}</span>
+                </div>
+                
+                {% for key, value in response.answers.items() %}
+                <div class="answer-item">
+                    <span class="answer-label">{{ key.replace('question_', 'Question ').replace('_', ' ').title() }}</span>
+                    
+                    {% if value is string %}
+                    <div class="answer-value">{{ value }}</div>
+                    {% else %}
+                    <div class="scale-grid">
+                        {% for item in value %}
+                        <div class="scale-box">
+                            <div class="emotion">{{ item }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+            
+            <div class="actions">
+                <a href="/" class="btn">📝 New Entry</a>
+                <button class="btn btn-clear" onclick="clearAll()">🗑️ Clear All</button>
+            </div>
+        {% else %}
+            <div class="no-responses">
+                <h2>No Responses Yet</h2>
+                <p>Start by filling out your first CBT thought record!</p>
+                <a href="/" class="btn">📝 Start Now</a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        async function clearAll() {
+            if (confirm('Are you sure you want to delete all your responses?')) {
+                try {
+                    const response = await fetch('/clear', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    alert('Error clearing responses. Please try again.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+'''
+
+with open(os.path.join(templates_dir, "results.html"), "w") as f:
+    f.write(results_html)
+
+print("✅ templates/results.html created")
